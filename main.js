@@ -8,7 +8,7 @@ const state = {
   running: false,
   score: 0,
   best: 0,
-  speed: 3.4,
+  speed: 1.7,
   gravity: 0.45,
   jumpVelocity: -8.5,
   groundY: canvas.height - 72,
@@ -28,12 +28,19 @@ const obstacles = [];
 const cheeses = [];
 
 const palette = {
-  sky: "#1b2440",
+  sky: "#1b2138",
   stars: "#f5f2e7",
-  ground: "#2d354f",
-  groundLine: "#c9c6b8",
-  cat: "#8b8f99",
-  catShadow: "#6a6f78",
+  wall: "#252b3f",
+  wallShadow: "#1d2234",
+  window: "#95b7ff",
+  windowFrame: "#f5f2e7",
+  floor: "#2d354f",
+  floorStripe: "#c9c6b8",
+  furniture: "#4f5b83",
+  furnitureShadow: "#394260",
+  outline: "#0b0b10",
+  cat: "#c7c6dd",
+  catShadow: "#a9a8bf",
   catWhite: "#f5f2e7",
   catEyes: "#151515",
   cheese: "#f4c84c",
@@ -48,7 +55,7 @@ const rng = () => Math.random();
 function resetGame() {
   state.running = true;
   state.score = 0;
-  state.speed = 3.4;
+  state.speed = 1.7;
   state.time = 0;
   cat.y = state.groundY;
   cat.velocityY = 0;
@@ -96,7 +103,7 @@ function update(dt) {
 
   state.time += dt;
   state.score += dt * 6;
-  state.speed = 3.4 + Math.min(3, state.score / 200);
+  state.speed = 1.7 + Math.min(1.5, state.score / 400);
 
   cat.velocityY += state.gravity;
   cat.y += cat.velocityY;
@@ -115,10 +122,10 @@ function update(dt) {
   }
 
   obstacles.forEach((obstacle) => {
-    obstacle.x -= state.speed * 2.2;
+    obstacle.x -= state.speed * 2.1;
   });
   cheeses.forEach((cheese) => {
-    cheese.x -= state.speed * 1.9;
+    cheese.x -= state.speed * 1.8;
   });
 
   while (obstacles.length && obstacles[0].x + obstacles[0].width < 0) {
@@ -166,29 +173,52 @@ function drawPixelRect(x, y, width, height, color) {
 
 function drawBackground() {
   drawPixelRect(0, 0, canvas.width, canvas.height, palette.sky);
-  for (let i = 0; i < 26; i += 1) {
-    const starX = (i * 31 + (state.time * 0.3)) % canvas.width;
-    const starY = (i * 19) % (canvas.height - 80);
-    drawPixelRect(starX, starY, 3, 3, palette.stars);
+
+  const scroll = (state.time * state.speed * 12) % canvas.width;
+  drawPixelRect(0, 0, canvas.width, state.groundY + 20, palette.wall);
+  for (let x = -scroll; x < canvas.width + 96; x += 96) {
+    drawPixelRect(x + 18, 40, 28, 28, palette.windowFrame);
+    drawPixelRect(x + 22, 44, 20, 20, palette.window);
+    drawPixelRect(x + 50, 54, 18, 12, palette.windowFrame);
+    drawPixelRect(x + 52, 56, 14, 8, palette.window);
+    drawPixelRect(x + 8, state.groundY - 40, 40, 20, palette.furniture);
+    drawPixelRect(x + 12, state.groundY - 36, 32, 12, palette.furnitureShadow);
   }
 
-  drawPixelRect(0, state.groundY + 40, canvas.width, 32, palette.ground);
-  drawPixelRect(0, state.groundY + 40, canvas.width, 4, palette.groundLine);
+  drawPixelRect(0, state.groundY + 20, canvas.width, 52, palette.floor);
+  for (let x = -scroll; x < canvas.width + 40; x += 40) {
+    drawPixelRect(x + 4, state.groundY + 30, 24, 6, palette.floorStripe);
+  }
+
+  drawPixelRect(0, state.groundY + 20, canvas.width, 4, palette.wallShadow);
 }
 
 function drawCat() {
-  drawPixelRect(cat.x + 6, cat.y + 8, cat.width - 12, cat.height - 8, palette.catShadow);
-  drawPixelRect(cat.x, cat.y, cat.width, cat.height, palette.cat);
+  const baseX = cat.x;
+  const baseY = cat.y + 2;
 
-  drawPixelRect(cat.x + 8, cat.y + 8, 12, 8, palette.catWhite);
-  drawPixelRect(cat.x + 36, cat.y + 8, 12, 8, palette.catWhite);
-  drawPixelRect(cat.x + 18, cat.y + 24, 20, 10, palette.catWhite);
-  drawPixelRect(cat.x + 6, cat.y + 32, 10, 8, palette.catWhite);
-  drawPixelRect(cat.x + 40, cat.y + 32, 10, 8, palette.catWhite);
+  drawPixelRect(baseX - 4, baseY + 4, cat.width + 8, cat.height - 2, palette.outline);
+  drawPixelRect(baseX + 6, baseY - 8, 10, 10, palette.outline);
+  drawPixelRect(baseX + 26, baseY - 8, 10, 10, palette.outline);
+  drawPixelRect(baseX + 44, baseY - 2, 16, 10, palette.outline);
+  drawPixelRect(baseX + 52, baseY - 18, 10, 16, palette.outline);
 
-  drawPixelRect(cat.x + 18, cat.y + 14, 4, 4, palette.catEyes);
-  drawPixelRect(cat.x + 34, cat.y + 14, 4, 4, palette.catEyes);
-  drawPixelRect(cat.x + 26, cat.y + 18, 4, 4, palette.catEyes);
+  drawPixelRect(baseX, baseY + 6, cat.width, cat.height - 6, palette.cat);
+  drawPixelRect(baseX + 8, baseY - 4, 8, 8, palette.cat);
+  drawPixelRect(baseX + 28, baseY - 4, 8, 8, palette.cat);
+  drawPixelRect(baseX + 46, baseY + 2, 12, 8, palette.cat);
+  drawPixelRect(baseX + 54, baseY - 14, 8, 16, palette.cat);
+
+  drawPixelRect(baseX + 6, baseY + 12, 8, 8, palette.catShadow);
+  drawPixelRect(baseX + 22, baseY + 12, 8, 8, palette.catShadow);
+
+  drawPixelRect(baseX + 10, baseY + 14, 4, 4, palette.catEyes);
+  drawPixelRect(baseX + 26, baseY + 14, 4, 4, palette.catEyes);
+  drawPixelRect(baseX + 18, baseY + 18, 4, 4, palette.catEyes);
+
+  drawPixelRect(baseX + 6, baseY + 28, 12, 8, palette.catWhite);
+  drawPixelRect(baseX + 30, baseY + 28, 12, 8, palette.catWhite);
+  drawPixelRect(baseX + 16, baseY + 22, 12, 6, palette.catWhite);
 }
 
 function drawCheese(cheese) {
